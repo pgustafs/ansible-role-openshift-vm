@@ -2,7 +2,7 @@
 # tasks file for openshift-vm
 - name: Create virtual machine 'myvm' with multus network interface
   community.kubevirt.kubevirt_vm:
-    api_key: "{{ api_key }}"
+    api_key: "{{ api_key }}"
     name: myvm
     namespace: ansible-testing
     memory: 512M
