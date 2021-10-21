@@ -1,5 +1,5 @@
 galaxy_info:
-  role_name: openshift-vm
+  role_name: openshift_vm
   author: Peter Gustafsson
   description: My Description
   license: MIT

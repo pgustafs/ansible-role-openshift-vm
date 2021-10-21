@@ -1,7 +1,7 @@
-openshift-vm
+openshift_vm
 ===========
 
-Basic description for openshift-vm
+Basic description for openshift_vm
 
 Requirements
 ------------
