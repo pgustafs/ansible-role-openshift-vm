@@ -17,3 +17,7 @@
         namespace: "{{ openshift_vm_namespace }}"
       spec:
         running: true
+    wait: yes
+    wait_condition:
+      status: "True"
+      type: "Ready"
