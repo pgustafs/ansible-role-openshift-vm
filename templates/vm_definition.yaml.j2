@@ -75,7 +75,7 @@ spec:
             - masquerade: {}
               model: virtio
               name: default
-            {% if openshift_vm_network_bridge %}
+            {% if openshift_vm_network_bridge == true %}
             - bridge: {}
               model: virtio
               name: nic-0
@@ -92,7 +92,7 @@ spec:
       networks:
         - name: default
           pod: {}
-        {% if openshift_vm_network_bridge %}
+        {% if openshift_vm_network_bridge == true %}
         - multus:
             networkName: "{{ openshift_vm_network_bridge_name }}"
           name: nic-0
