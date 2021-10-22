@@ -22,15 +22,26 @@
       status: "True"
       type: "Ready"
 
-- name: " get information about virtual machine {{ openshift_vm_name }}"
+- name: "Wait on bridge IP for {{ openshift_vm_name }}"
   kubernetes.core.k8s_info:
     api_key: "{{ api_key }}"
-    kind: VirtualMachine
-    name: "{{ openshift_vm_name }}"
+    kind: Pod
+    label_selectors:
+      - "vm.kubevirt.io/name = {{ openshift_vm_name }}"
     namespace: "{{ openshift_vm_namespace }}"
   register: vm_info
+  until: vm_info.resources[0].status.hostIP is defined
+  retries: 10
+  delay: 2
+  when: openshift_vm_network_bridge
 
-- name: Print vm_info
+- name: Set variable storing bridge IP address
+  set_fact:
+    openshift_vm_bridge_ip_address: "{{ vm_info.resources[0].status.hostIP }}"
+  when: openshift_vm_network_bridge
+
+- name: Debug bridge IP
   ansible.builtin.debug:
-    var: vm_info
+    var: openshift_vm_bridge_ip_address
     verbosity: 2
+  when: openshift_vm_network_bridge

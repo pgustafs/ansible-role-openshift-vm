@@ -52,7 +52,7 @@ spec:
       labels:
         kubevirt.io/domain: vm-example
         kubevirt.io/size: tiny
-        vm.kubevirt.io/name: vm-example
+        vm.kubevirt.io/name: {{ openshift_vm_name }}
         os.template.kubevirt.io/rhel8.4: 'true'
         flavor.template.kubevirt.io/tiny: 'true'
         workload.template.kubevirt.io/server: 'true'
@@ -75,6 +75,11 @@ spec:
             - masquerade: {}
               model: virtio
               name: default
+            {% if openshift_vm_network_bridge %}
+            - bridge: {}
+              model: virtio
+              name: nic-0
+            {% endif %}
           networkInterfaceMultiqueue: true
           rng: {}
         machine:
@@ -87,6 +92,11 @@ spec:
       networks:
         - name: default
           pod: {}
+        {% if openshift_vm_network_bridge %}
+        - multus:
+            networkName: "{{ openshift_vm_network_bridge_name }}"
+          name: nic-0
+        {% endif %}
       terminationGracePeriodSeconds: 180
       volumes:
         - dataVolume:

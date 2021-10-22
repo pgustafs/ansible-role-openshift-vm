@@ -4,6 +4,10 @@ openshift_vm_name: example
 openshift_vm_hostname: "{{ openshift_vm_name }}"
 openshift_vm_namespace: ansible-testing
 
+# Networking
+openshift_vm_network_bridge: false
+openshift_vm_network_bridge_name: bridge-br1
+
 # dataVolume vars
 openshift_vm_dv_storage_class: ocs-storagecluster-ceph-rbd
 openshift_vm_dv_access_mode: ReadWriteMany
