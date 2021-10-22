@@ -13,5 +13,7 @@
     kind: VirtualMachine
     name: "{{ openshift_vm_name }}"
     definition:
+      metadata:
+        namespace: "{{ openshift_vm_namespace }}"
       spec:
         running: true
