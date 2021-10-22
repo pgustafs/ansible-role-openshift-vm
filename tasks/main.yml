@@ -1,9 +1,17 @@
 ---
 # tasks file for openshift-vm
-- name: Create virtual machine 'myvm' with multus network interface
+- name: "Create virtual machine {{ openshift_vm_name }} with multus network interface"
   kubernetes.core.k8s:
     api_key: "{{ api_key }}"
     state: present
     template: "vm_definition.yaml.j2"
     wait: yes
-    
+
+- name: "Start virtual machine {{ openshift_vm_name }}"
+  kubernetes.core.k8s:
+    api_key: "{{ api_key }}"
+    kind: VirtualMachine
+    name: "{{ openshift_vm_name }}"
+    definition:
+      spec:
+        running: true
