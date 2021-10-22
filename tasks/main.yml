@@ -21,3 +21,16 @@
     wait_condition:
       status: "True"
       type: "Ready"
+
+- name: " get information about virtual machine {{ openshift_vm_name }}"
+  kubernetes.core.k8s_info:
+    api_key: "{{ api_key }}"
+    kind: VirtualMachine
+    name: "{{ openshift_vm_name }}"
+    namespace: "{{ openshift_vm_namespace }}"
+  register: vm_info
+
+- name: Print vm_info
+  ansible.builtin.debug:
+    var: vm_info
+    verbosity: 2
