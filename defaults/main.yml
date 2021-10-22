@@ -1,3 +1,14 @@
 ---
 # defaults file for openshift-vm
+openshift_vm_name: example
+openshift_vm_hostname: "{{ openshift_vm_name }}"
+openshift_vm_namespace: ansible-testing
 
+# dataVolume vars
+openshift_vm_dv_storage_class: ocs-storagecluster-ceph-rbd
+openshift_vm_dv_access_mode: ReadWriteMany
+openshift_vm_dv_volume_mode: Block
+openshift_vm_dv_size: 15Gi
+# Source PVC to clone from
+openshift_vm_source_pvc_name:
+openshift_vm_source_pvc_namespace: openshift-virtualization-os-images

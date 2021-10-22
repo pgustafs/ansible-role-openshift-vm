@@ -1,0 +1,102 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  annotations:
+    vm.kubevirt.io/validations: |
+      [
+        {
+          "name": "minimal-required-memory",
+          "path": "jsonpath::.spec.domain.resources.requests.memory",
+          "rule": "integer",
+          "message": "This VM requires more memory.",
+          "min": 1610612736
+        }
+      ]
+    name.os.template.kubevirt.io/rhel8.4: Red Hat Enterprise Linux 8.0 or higher
+    description: VM example
+  labels:
+    app: "{{ openshift_vm_name }}"
+    vm.kubevirt.io/template: rhel8-server-tiny
+    vm.kubevirt.io/template.revision: '1'
+    vm.kubevirt.io/template.version: v0.15.1
+    os.template.kubevirt.io/rhel8.4: 'true'
+    flavor.template.kubevirt.io/tiny: 'true'
+    workload.template.kubevirt.io/server: 'true'
+    vm.kubevirt.io/template.namespace: openshift
+  name: "{{ openshift_vm_name }}"
+  namespace: "{{ openshift_vm_namespace }}"
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: "{{ openshift_vm_name }}-rootdisk"
+      spec:
+        pvc:
+          accessModes:
+            - {{ openshift_vm_dv_access_mode }}
+          resources:
+            requests:
+              storage: {{ openshift_vm_dv_size }}
+          storageClassName: {{ openshift_vm_dv_storage_class }}
+          volumeMode: {{ openshift_vm_dv_volume_mode }}
+        source:
+          pvc:
+            name: rhel8-211018-template
+            namespace: openshift-virtualization-os-images
+  running: false
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: tiny
+        vm.kubevirt.io/os: rhel8
+        vm.kubevirt.io/workload: server
+      labels:
+        kubevirt.io/domain: vm-example
+        kubevirt.io/size: tiny
+        vm.kubevirt.io/name: vm-example
+        os.template.kubevirt.io/rhel8.4: 'true'
+        flavor.template.kubevirt.io/tiny: 'true'
+        workload.template.kubevirt.io/server: 'true'
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: containerdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+          networkInterfaceMultiqueue: true
+          rng: {}
+        machine:
+          type: pc-q35-rhel8.4.0
+        resources:
+          requests:
+            memory: 1.5Gi
+      evictionStrategy: LiveMigrate
+      hostname: "{{ openshift_vm_hostname }}"
+      networks:
+        - name: default
+          pod: {}
+      terminationGracePeriodSeconds: 180
+      volumes:
+        - dataVolume:
+            name: "{{ openshift_vm_name }}-rootdisk"
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: cloud-user
+              password: Redhat123!
+              chpasswd:
+                expire: false
+          name: cloudinitdisk
