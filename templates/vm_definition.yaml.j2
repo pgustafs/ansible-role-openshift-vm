@@ -1,3 +1,4 @@
+#jinja2: lstrip_blocks: True
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
@@ -75,11 +76,11 @@ spec:
             - masquerade: {}
               model: virtio
               name: default
-            {% if openshift_vm_network_bridge == "true" -%}
+            {% if openshift_vm_network_bridge is true %}
             - bridge: {}
               model: virtio
               name: nic-0
-            {% endif -%}
+            {% endif %}
           networkInterfaceMultiqueue: true
           rng: {}
         machine:
@@ -92,11 +93,11 @@ spec:
       networks:
         - name: default
           pod: {}
-        {% if openshift_vm_network_bridge == "true" -%}
+        {% if openshift_vm_network_bridge is true %}
         - multus:
-            networkName: "{{ openshift_vm_network_bridge_name }}"
+            networkName: "{{ openshift_vm_network_bridge_name }}"
           name: nic-0
-        {% endif -%}
+        {% endif %}
       terminationGracePeriodSeconds: 180
       volumes:
         - dataVolume:
