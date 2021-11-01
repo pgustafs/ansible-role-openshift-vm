@@ -1,0 +1,61 @@
+---
+# Tasks to retrieve ipv4 address of the bridge interface 
+- name: "Retrieve information about virtual machine {{ openshift_vm_name }}"
+  kubernetes.core.k8s_info:
+    api_key: "{{ api_key }}"
+    kind: VirtualMachine
+    namespace: "{{ openshift_vm_namespace }}"
+    name: "{{ openshift_vm_name }}"
+  register: vm_info
+
+- name: "Display all vm info"
+  ansible.builtin.debug:
+    var: vm_info
+    verbosity: 2
+
+- name: Set bridge_mac_address fact
+  ansible.builtin.set_fact:
+    # macAddress is returned as a list hence the join converting it to a string
+    bridge_mac_address: "{{ vm_info | json_query(query) | join() }}"
+  vars:
+    # following query returns the object containing the key bridge from spec.template.spec.domain.devices.interfaces[]
+    query: resources[0].spec.template.spec.domain.devices.interfaces[?bridge!=null].macAddress
+
+- name: "Display bridge interface mac address"
+  ansible.builtin.debug:
+    var: bridge_mac_address
+    verbosity: 2
+
+- name: "Retrieve information about the virt-launcher pod for {{ openshift_vm_name }}"
+  kubernetes.core.k8s_info:
+    api_key: "{{ api_key }}"
+    kind: Pod
+    label_selectors:
+      - "vm.kubevirt.io/name = {{ openshift_vm_name }}"
+    namespace: "{{ openshift_vm_namespace }}"
+  register: virt_launcher_pod
+  until: virt_launcher_pod.resources[0].status.phase == "Running"
+  retries: 10
+  delay: 2
+
+- name: "Print all virt_launcher_pod info"
+  ansible.builtin.debug:
+    var: virt_launcher_pod
+    verbosity: 2
+
+- name: "Set fact storing virt-launcher pod name" 
+  ansible.builtin.set_fact:
+    virt_launcher_pod: "{{ virt_launcher_pod.resources[0].metadata.name }}"
+
+- name: "Display virt-launcher pod name"
+  ansible.builtin.debug:
+    var: virt_launcher_pod
+    verbosity: 2
+
+- name: "Include tasks to determine the IP address"
+  ansible.builtin.include_tasks: determine_kvm_guest_ip.yml
+
+- name: "Display bridge ipv4 address"
+  ansible.builtin.debug:
+    var: bridge_ipv4_address
+    verbosity: 2

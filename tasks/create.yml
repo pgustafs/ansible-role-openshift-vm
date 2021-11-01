@@ -1,0 +1,26 @@
+---
+# tasks file for openshift-vm
+- name: "Create virtual machine {{ openshift_vm_name }}"
+  kubernetes.core.k8s:
+    api_key: "{{ api_key }}"
+    state: present
+    template: "vm_definition.yaml.j2"
+    wait: yes
+
+- include_tasks: start.yml
+
+- include_tasks: network_bridge.yml
+  when: openshift_vm_network_bridge
+
+#- name: "Wait on bridge IP for {{ openshift_vm_name }}"
+#  kubernetes.core.k8s_info:
+#    api_key: "{{ api_key }}"
+#    kind: Pod
+#    label_selectors:
+#      - "vm.kubevirt.io/name = {{ openshift_vm_name }}"
+#    namespace: "{{ openshift_vm_namespace }}"
+#  register: vm_info
+#  until: vm_info.resources[0].status.hostIP is defined
+#  retries: 10
+#  delay: 2
+#  when: openshift_vm_network_bridge

@@ -41,7 +41,7 @@ spec:
           volumeMode: {{ openshift_vm_dv_volume_mode }}
         source:
           pvc:
-            name: rhel8-211018-template
+            name: {{ openshift_vm_source_pvc_name }}
             namespace: openshift-virtualization-os-images
   running: false
   template:

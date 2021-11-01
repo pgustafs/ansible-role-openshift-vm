@@ -1,0 +1,48 @@
+---
+- name: Since it takes some time before IP address can be seen in KVM guest, we try a couple of times to determine th IP!
+  block:
+  - name: Increment the retry count
+    ansible.builtin.set_fact:
+      retry_count: "{{ 0 if retry_count is undefined else retry_count | int + 1 }}"
+
+  - name: Retrieve network information from kvm guest
+    kubernetes.core.k8s_exec:
+      api_key: "{{ api_key }}"
+      namespace: "{{ openshift_vm_namespace }}"
+      pod: "{{ virt_launcher_pod }}"
+      command: virsh qemu-agent-command {{ openshift_vm_namespace }}_{{ openshift_vm_name }} '{"execute":"guest-network-get-interfaces"}'
+    register: command_status
+    until: command_status.return_code == 0
+    retries: 10
+    delay: 2
+
+  - name: Display output from virsh qemu-agent-command <hostname> '{"execute":"guest-network-get-interfaces"}'
+    ansible.builtin.debug:
+      var: command_status
+      verbosity: 2
+
+  - name: Try to set bridge_ipv4 fact
+    ansible.builtin.set_fact:
+      # when using json_query on output from k8s_exec command the from_json filter needs to be used
+      bridge_ipv4_address: "{{ command_status.stdout | from_json | json_query(query) | join() }}"
+    vars:
+      query: return[?"hardware-address"=='{{ bridge_mac_address }}']."ip-addresses"[] | [?"ip-address-type"=='ipv4']."ip-address"
+  
+  always:
+    - name: Fail when the maximum number of attempts to determine ip address is reached
+      ansible.builtin.fail:
+        msg: "Could not determine the ip address of the KVM guest"
+      when: retry_count | int == 10
+
+    #- name: Check the variable type
+    #  ansible.builtin.debug:
+    #    msg: "{{ bridge_ipv4_address | type_debug }}"
+
+    - name: Wait 2 seconds util we try again
+      wait_for:
+        timeout: 2
+      when: bridge_ipv4_address | length == 0
+    
+    - name: Has not been able to determine IP address, try again
+      ansible.builtin.include_tasks: determine_kvm_guest_ip.yml
+      when: bridge_ipv4_address | length == 0

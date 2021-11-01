@@ -1,47 +1,28 @@
 ---
-# tasks file for openshift-vm
-- name: "Create virtual machine {{ openshift_vm_name }} with multus network interface"
-  kubernetes.core.k8s:
-    api_key: "{{ api_key }}"
-    state: present
-    template: "vm_definition.yaml.j2"
-    wait: yes
-
-- name: "Start virtual machine {{ openshift_vm_name }}"
-  kubernetes.core.k8s:
-    api_key: "{{ api_key }}"
-    kind: VirtualMachine
-    name: "{{ openshift_vm_name }}"
-    definition:
-      metadata:
-        namespace: "{{ openshift_vm_namespace }}"
-      spec:
-        running: true
-    wait: yes
-    wait_condition:
-      status: "True"
-      type: "Ready"
-
-- name: "Wait on bridge IP for {{ openshift_vm_name }}"
+- name: "Retrieve information about virtual machine {{ openshift_vm_name }}"
   kubernetes.core.k8s_info:
     api_key: "{{ api_key }}"
-    kind: Pod
-    label_selectors:
-      - "vm.kubevirt.io/name = {{ openshift_vm_name }}"
+    kind: VirtualMachine
     namespace: "{{ openshift_vm_namespace }}"
+    name: "{{ openshift_vm_name }}"
   register: vm_info
-  until: vm_info.resources[0].status.hostIP is defined
-  retries: 10
-  delay: 2
-  when: openshift_vm_network_bridge
 
-- name: Set variable storing bridge IP address
-  set_fact:
-    openshift_vm_bridge_ip_address: "{{ vm_info.resources[0].status.hostIP }}"
-  when: openshift_vm_network_bridge
+- name: "set vm_exist fact"
+  ansible.builtin.set_fact:
+    vm_exist: "{{ true if vm_info.resources[0].metadata.name is defined else false }}"
 
-- name: Debug bridge IP
+- include_tasks: create.yml
+  when: openshift_vm_action == "create" and vm_exist is false
+
+- name: "Exit with a message" 
   ansible.builtin.debug:
-    var: openshift_vm_bridge_ip_address
-    verbosity: 2
-  when: openshift_vm_network_bridge
+    msg: "A Virtual machine with the name {{ openshift_vm_name }} already exist in project {{ openshift_vm_namespace }}"
+  when: openshift_vm_action == "create" and vm_exist is true
+
+- include_tasks: delete.yml
+  when: openshift_vm_action == "delete" and vm_exist is true
+
+- name: "Exit with a message" 
+  ansible.builtin.debug:
+    msg: "A Virtual machine with the name {{ openshift_vm_name }} does not exist in project {{ openshift_vm_namespace }}"
+  when: openshift_vm_action == "delete" and vm_exist is false

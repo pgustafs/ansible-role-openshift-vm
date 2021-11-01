@@ -1,0 +1,12 @@
+---
+- name: "Stop virtual machine {{ openshift_vm_name }}"
+  kubernetes.core.k8s:
+    api_key: "{{ api_key }}"
+    kind: VirtualMachine
+    name: "{{ openshift_vm_name }}"
+    definition:
+      metadata:
+        namespace: "{{ openshift_vm_namespace }}"
+      spec:
+        running: false
+    wait: yes

@@ -1,4 +1,7 @@
 ---
+# create, delete, stop, start
+openshift_vm_action: create
+
 # defaults file for openshift-vm
 openshift_vm_name: example
 openshift_vm_hostname: "{{ openshift_vm_name }}"

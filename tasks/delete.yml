@@ -1,0 +1,13 @@
+---
+- include_tasks: stop.yml
+
+- name: "Delete virtual machine {{ openshift_vm_name }}"
+  kubernetes.core.k8s:
+    api_key: "{{ api_key }}"
+    state: absent
+    kind: VirtualMachine
+    name: "{{ openshift_vm_name }}"
+    definition:
+      metadata:
+        namespace: "{{ openshift_vm_namespace }}"
+    wait: yes
