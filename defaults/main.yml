@@ -1,11 +1,11 @@
 ---
 # create, delete, stop, start
-openshift_vm_action: create
+openshift_vm_action:
 
 # defaults file for openshift-vm
-openshift_vm_name: example
+openshift_vm_name:
 openshift_vm_hostname: "{{ openshift_vm_name }}"
-openshift_vm_namespace: ansible-testing
+openshift_vm_namespace:
 
 # Networking
 openshift_vm_network_bridge: false

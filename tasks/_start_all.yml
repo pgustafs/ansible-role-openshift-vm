@@ -1,0 +1,28 @@
+---
+- name: Display vm_list var
+  ansible.builtin.debug:
+    var: vm_list
+    verbosity: 2
+
+- name: Select only vm name and namespace from the big chunk of data
+  ansible.builtin.set_fact:
+    vms: "{{ vm_list | json_query(query) }}"
+  vars:
+    query: "resources[*].metadata.{name: name, namespace: namespace}"
+
+- name: "Start virtual machine"
+  kubernetes.core.k8s:
+    api_key: "{{ api_key }}"
+    kind: VirtualMachine
+    name: "{{ item.name }}"
+    definition:
+      metadata:
+        namespace: "{{ item.namespace }}"
+      spec:
+        running: true
+    wait: yes
+    wait_condition:
+      status: "True"
+      type: "Ready"
+  loop:
+        "{{ vms }}"

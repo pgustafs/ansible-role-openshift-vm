@@ -1,0 +1,13 @@
+---
+- name: Display openshift_vm_namespace var
+  ansible.builtin.debug:
+    var: openshift_vm_namespace
+    verbosity: 2
+
+- name: "openshift_vm_namespace is not defined, including stop_all_cluster.yml"
+  ansible.builtin.include_tasks: stop_all_cluster.yml
+  when: (openshift_vm_namespace is not defined) or (openshift_vm_namespace is none)
+
+- name: "openshift_vm_namespace is defined, including stop_all_namespace.yml"
+  ansible.builtin.include_tasks: stop_all_namespace.yml
+  when: (openshift_vm_namespace is defined) and (openshift_vm_namespace is not none)

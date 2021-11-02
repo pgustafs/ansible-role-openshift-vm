@@ -1,0 +1,10 @@
+---
+- name: "Get a list of all virtual machines from namespace {{ openshift_vm_namespace }}"
+  kubernetes.core.k8s_info:
+    api_key: "{{ api_key }}"
+    kind: VirtualMachine
+    namespace: "{{ openshift_vm_namespace }}"
+  register: vm_list
+
+- name: "include _start_all.yml"
+  ansible.builtin.include_tasks: _start_all.yml

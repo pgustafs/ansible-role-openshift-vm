@@ -1,0 +1,9 @@
+---
+- name: Get a list of all virtual machines from any namespace
+  kubernetes.core.k8s_info:
+    api_key: "{{ api_key }}"
+    kind: VirtualMachine
+  register: vm_list
+
+- name: "include _stop_all.yml"
+  ansible.builtin.include_tasks: _stop_all.yml

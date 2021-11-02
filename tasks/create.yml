@@ -1,26 +1,20 @@
 ---
-# tasks file for openshift-vm
-- name: "Create virtual machine {{ openshift_vm_name }}"
-  kubernetes.core.k8s:
+- name: "Retrieve information about virtual machine {{ openshift_vm_name }}"
+  kubernetes.core.k8s_info:
     api_key: "{{ api_key }}"
-    state: present
-    template: "vm_definition.yaml.j2"
-    wait: yes
+    kind: VirtualMachine
+    namespace: "{{ openshift_vm_namespace }}"
+    name: "{{ openshift_vm_name }}"
+  register: vm_info
 
-- include_tasks: start.yml
+- name: "set vm_exist fact"
+  ansible.builtin.set_fact:
+    vm_exist: "{{ true if vm_info.resources[0].metadata.name is defined else false }}"
 
-- include_tasks: network_bridge.yml
-  when: openshift_vm_network_bridge
+- include_tasks: _create.yml
+  when: openshift_vm_action == "create" and vm_exist is false
 
-#- name: "Wait on bridge IP for {{ openshift_vm_name }}"
-#  kubernetes.core.k8s_info:
-#    api_key: "{{ api_key }}"
-#    kind: Pod
-#    label_selectors:
-#      - "vm.kubevirt.io/name = {{ openshift_vm_name }}"
-#    namespace: "{{ openshift_vm_namespace }}"
-#  register: vm_info
-#  until: vm_info.resources[0].status.hostIP is defined
-#  retries: 10
-#  delay: 2
-#  when: openshift_vm_network_bridge
+- name: "Exit with a message" 
+  ansible.builtin.debug:
+    msg: "A Virtual machine with the name {{ openshift_vm_name }} already exist in project {{ openshift_vm_namespace }}"
+  when: openshift_vm_action == "create" and vm_exist is true
